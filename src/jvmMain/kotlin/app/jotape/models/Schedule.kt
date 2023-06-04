@@ -17,7 +17,7 @@ data class Schedule(val hour: LocalTime) {
 
             stmt.close()
 
-            return schedules
+            return schedules.sortedBy { it.hour }
         }
     }
 

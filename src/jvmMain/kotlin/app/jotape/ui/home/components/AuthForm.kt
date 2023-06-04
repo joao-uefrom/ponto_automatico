@@ -1,28 +1,18 @@
 package app.jotape.ui.home.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import app.jotape.services.GlobalService
-import app.jotape.ui.home.HomeViewModel
 import app.jotape.ui.home.HomeUIState
+import app.jotape.ui.home.HomeViewModel
 
 @Composable
 fun AuthForm(uiState: HomeUIState, modifier: Modifier) {
-    val globalState by GlobalService.state.collectAsState()
-
     Column(modifier) {
         SectionTitle("Autenticação")
 
@@ -65,12 +55,28 @@ fun AuthForm(uiState: HomeUIState, modifier: Modifier) {
                 visualTransformation = PasswordVisualTransformation()
             )
 
-            Button(
-                enabled = uiState.isLoading.not() && globalState.isValid.not(),
-                modifier = Modifier.fillMaxWidth(),
-                onClick = HomeViewModel::validateAuth
-            ) {
-                Text(if (uiState.isLoading) "Validando" else if (globalState.isValid.not()) "Validar" else "Validado")
+            Row {
+                IconButton(
+                    enabled = uiState.isLoading.not() && HomeViewModel.canGoBackAuthFields(),
+                    onClick = HomeViewModel::getUserStored,
+                    modifier = Modifier.weight(.3f).padding(end = 8.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Undo,
+                        null
+                    )
+                }
+                Button(
+                    enabled = uiState.isLoading.not() && uiState.isValid.not(),
+                    modifier = Modifier.weight(.7f).fillMaxWidth(),
+                    onClick = HomeViewModel::validateAuth
+                ) {
+                    Text(
+                        if (uiState.isLoading) "Validando"
+                        else if (uiState.isValid.not()) "Validar"
+                        else "Validado"
+                    )
+                }
             }
         }
     }

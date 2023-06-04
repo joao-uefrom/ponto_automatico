@@ -34,14 +34,18 @@ fun InfoBar(modifier: Modifier = Modifier) {
                 )
                 Divider(Modifier.width(1.dp).fillMaxHeight())
             }
-            globalState.nextExec?.let { nextExec ->
-                Text(
-                    "Próximo ponto: ${nextExec.toBRDateTime()}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Divider(Modifier.width(1.dp).fillMaxHeight())
+
+            if (globalState.isRunning) {
+                globalState.nextExec?.let { nextExec ->
+                    Text(
+                        "Próximo ponto: ${nextExec.toBRDateTime()}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Divider(Modifier.width(1.dp).fillMaxHeight())
+                }
             }
+
             Text("Versão: $version", fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }

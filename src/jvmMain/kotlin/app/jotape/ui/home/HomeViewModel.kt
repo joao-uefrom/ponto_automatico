@@ -1,48 +1,62 @@
 package app.jotape.ui.home
 
-import app.jotape.models.Configuration
 import app.jotape.models.Schedule
+import app.jotape.models.User
 import app.jotape.services.GlobalService
 import app.jotape.services.HttpService
-import kotlinx.coroutines.*
+import app.jotape.services.SchedulerService
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 object HomeViewModel {
+    private val globalState = GlobalService.state
+
     private val _uiState = MutableStateFlow(HomeUIState())
     val uiState = _uiState.asStateFlow()
 
     init {
         _uiState.update {
             _uiState.value.copy(
-                email = Configuration.get(Configuration.Key.EMAIL)?.value ?: "",
-                password = Configuration.get(Configuration.Key.PASSWORD)?.value ?: "",
-                twoFa = Configuration.get(Configuration.Key.TWO_FA)?.value ?: "",
-                schedules = Schedule.getAll()
+                schedules = Schedule.getAll(),
+                isLoading = false
+            )
+        }
+
+        getUserStored()
+    }
+
+    fun setEmail(value: String) {
+        _uiState.update { _uiState.value.copy(email = value) }
+
+        _uiState.update {
+            _uiState.value.copy(
+                isValid = if (canGoBackAuthFields()) false else GlobalService.isValid()
             )
         }
     }
 
-    fun setEmail(value: String) {
-        GlobalService.setValidState(false)
-        _uiState.update {
-            _uiState.value.copy(email = value)
-        }
-    }
-
     fun setPassword(value: String) {
-        GlobalService.setValidState(false)
+        _uiState.update { _uiState.value.copy(password = value) }
+
         _uiState.update {
-            _uiState.value.copy(password = value)
+            _uiState.value.copy(
+                isValid = if (canGoBackAuthFields()) false else GlobalService.isValid()
+            )
         }
     }
 
     fun set2fa(value: String) {
-        GlobalService.setValidState(false)
+        _uiState.update { _uiState.value.copy(twoFa = value) }
+
         _uiState.update {
-            _uiState.value.copy(twoFa = value)
+            _uiState.value.copy(
+                isValid = if (canGoBackAuthFields()) false else GlobalService.isValid()
+            )
         }
     }
 
@@ -79,6 +93,27 @@ object HomeViewModel {
         }
     }
 
+    fun canGoBackAuthFields(): Boolean {
+        if (globalState.value.user == null) return false
+
+        return _uiState.value.email != globalState.value.user?.email ||
+                _uiState.value.password != globalState.value.user?.password ||
+                _uiState.value.twoFa != globalState.value.user?.twoFa
+    }
+
+    fun getUserStored() {
+        globalState.value.user?.let { user ->
+            _uiState.update {
+                _uiState.value.copy(
+                    email = user.email,
+                    password = user.password,
+                    twoFa = user.twoFa,
+                    isValid = user.isValid
+                )
+            }
+        }
+    }
+
     fun removeSchedule(schedule: Schedule) {
         schedule.delete()
         _uiState.update {
@@ -88,28 +123,23 @@ object HomeViewModel {
 
     @OptIn(DelicateCoroutinesApi::class)
     fun validateAuth() {
-        clearErrors()
-
-        if (isAuthFieldsValid().not()) return
+        if (isAuthFieldsValid().not())
+            return
 
         _uiState.update {
             _uiState.value.copy(isLoading = true)
         }
 
         GlobalScope.launch {
-            val email = _uiState.value.email
-            val password = _uiState.value.password
-            val twoFa = _uiState.value.twoFa
+            val user = User(
+                _uiState.value.email,
+                _uiState.value.password,
+                _uiState.value.twoFa
+            )
 
-            if (HttpService.validateAuth(email, password, twoFa)) {
-                Configuration(Configuration.Key.EMAIL, email).insertUpdate()
-                Configuration(Configuration.Key.PASSWORD, password).insertUpdate()
-                Configuration(Configuration.Key.TWO_FA, twoFa).insertUpdate()
-
-                GlobalService.setValidState(true)
-            } else {
-                GlobalService.setValidState(false)
-            }
+            user.isValid = HttpService.validateAuth(user)
+            GlobalService.setUser(user)
+            getUserStored()
 
             _uiState.update {
                 _uiState.value.copy(isLoading = false)
@@ -131,6 +161,8 @@ object HomeViewModel {
         val email = _uiState.value.email
         val password = _uiState.value.password
         val twoFa = _uiState.value.twoFa
+
+        clearErrors()
 
         if (email.isEmpty()) _uiState.update {
             _uiState.value.copy(emailHasError = true)

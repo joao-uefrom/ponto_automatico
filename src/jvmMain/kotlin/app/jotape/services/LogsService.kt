@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.time.LocalDateTime
 
-object LogService {
+object LogsService {
     private var _logsInitialized = false
 
     private val _logs: MutableStateFlow<List<Log>> by lazy {
@@ -21,23 +21,24 @@ object LogService {
 
     fun info(event: String, message: String) {
         val log = Log(event, message, Log.Type.INFO, LocalDateTime.now())
-        log.insert()
-
         insert(log)
     }
 
     fun error(event: String, message: String) {
         val log = Log(event, message, Log.Type.ERROR, LocalDateTime.now())
-        log.insert()
-
         insert(log)
     }
 
     fun warning(event: String, message: String) {
         val log = Log(event, message, Log.Type.WARNING, LocalDateTime.now())
-        log.insert()
-
         insert(log)
+    }
+
+    fun deleteAll() {
+        Log.deleteAll()
+
+        if (_logsInitialized)
+            _logs.update { emptyList() }
     }
 
     private fun insert(log: Log) {

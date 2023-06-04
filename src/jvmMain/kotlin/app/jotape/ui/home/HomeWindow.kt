@@ -60,7 +60,7 @@ fun HomeWindow(
                     Actions(uiState, Modifier.weight(.25f).fillMaxSize())
                 }
 
-                InfoBar(modifier = Modifier.fillMaxWidth().height(24.dp))
+                InfoBar(Modifier.fillMaxWidth().height(24.dp))
             }
         }
     }

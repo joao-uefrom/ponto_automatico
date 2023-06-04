@@ -1,6 +1,8 @@
 package app.jotape.models
 
 import app.jotape.data.Database
+import app.jotape.dateTimeFormatterFromSQL
+import java.time.LocalDateTime
 
 data class Configuration(
     val key: Key,
@@ -39,6 +41,22 @@ data class Configuration(
             stmt.close()
 
             return configuration
+        }
+
+        fun getLastExec(): LocalDateTime? {
+            get(Key.LAST_EXEC)?.let {
+                return LocalDateTime.parse(it.value, dateTimeFormatterFromSQL())
+            }
+
+            return null
+        }
+
+        fun getNextExec(): LocalDateTime? {
+            get(Key.NEXT_EXEC)?.let {
+                return LocalDateTime.parse(it.value, dateTimeFormatterFromSQL())
+            }
+
+            return null
         }
     }
 

@@ -24,8 +24,8 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.4.0")
-                implementation("org.jetbrains.compose.material3:material3-desktop:1.4.0")
                 implementation("org.xerial:sqlite-jdbc:3.42.0.0")
+                implementation("org.quartz-scheduler:quartz:2.3.2")
             }
         }
         val jvmTest by getting

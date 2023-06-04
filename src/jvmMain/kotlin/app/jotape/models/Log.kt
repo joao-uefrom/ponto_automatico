@@ -17,20 +17,14 @@ data class Log(
         WARNING
     }
 
-    fun insert() {
-        val sql = "INSERT INTO logs (event, message, type, created_at) VALUES (?, ?, ?, ?)"
-        val stmt = Database.connection.prepareStatement(sql)
-
-        stmt.setString(1, event)
-        stmt.setString(2, message)
-        stmt.setString(3, type.toString())
-        stmt.setString(4, createdAt.toSQLDateTime())
-
-        stmt.executeUpdate()
-        stmt.close()
-    }
-
     companion object {
+        fun deleteAll() {
+            val sql = "DELETE FROM logs WHERE 1"
+            val stmt = Database.connection.prepareStatement(sql)
+            stmt.executeUpdate()
+            stmt.close()
+        }
+
         fun getAll(): List<Log> {
             val sql = "SELECT event, message, type, created_at FROM logs ORDER BY id DESC"
             val stmt = Database.connection.prepareStatement(sql)
@@ -53,5 +47,18 @@ data class Log(
 
             return logs
         }
+    }
+
+    fun insert() {
+        val sql = "INSERT INTO logs (event, message, type, created_at) VALUES (?, ?, ?, ?)"
+        val stmt = Database.connection.prepareStatement(sql)
+
+        stmt.setString(1, event)
+        stmt.setString(2, message)
+        stmt.setString(3, type.toString())
+        stmt.setString(4, createdAt.toSQLDateTime())
+
+        stmt.executeUpdate()
+        stmt.close()
     }
 }

@@ -14,22 +14,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.jotape.models.Log
-import app.jotape.services.LogService
+import app.jotape.services.LogsService
 import app.jotape.ui.home.HomeUIState
 
 private const val weightEvent = .2f
 private const val weightMessage = .5f
 private const val weightDate = .3f
 private const val rowHeight = 24
-private const val rowStartPadding = 8
+private const val rowHorizontalPadding = 4
 private const val rowFontSize = 12
 
 @Composable
 fun LogTable(uiState: HomeUIState, modifier: Modifier) {
-    val logs by LogService.logs.collectAsState()
+    val logs by LogsService.logs.collectAsState()
     val scrollState = rememberScrollState(0)
 
     Column(modifier) {
@@ -66,19 +67,19 @@ private fun LogHead() {
         Text(
             "Evento",
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(weightEvent).padding(start = rowStartPadding.dp)
+            modifier = Modifier.weight(weightEvent).padding(start = rowHorizontalPadding.dp)
         )
         Divider(Modifier.width(1.dp).height(rowHeight.dp))
         Text(
             "Mensagem",
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(weightMessage).padding(start = rowStartPadding.dp)
+            modifier = Modifier.weight(weightMessage).padding(start = rowHorizontalPadding.dp)
         )
         Divider(Modifier.width(1.dp).height(rowHeight.dp))
         Text(
             "Data",
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(weightDate).padding(start = rowStartPadding.dp)
+            modifier = Modifier.weight(weightDate).padding(start = rowHorizontalPadding.dp)
         )
     }
 }
@@ -88,23 +89,23 @@ private fun LogCell(log: Log) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Tooltip(
             log.event,
-            Modifier.weight(weightEvent).padding(start = rowStartPadding.dp)
+            Modifier.weight(weightEvent).padding(horizontal = rowHorizontalPadding.dp)
         ) {
-            Text(text = log.event, fontSize = rowFontSize.sp, maxLines = 1)
+            Text(text = log.event, fontSize = rowFontSize.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Divider(Modifier.width(1.dp).height(rowHeight.dp))
         Tooltip(
             log.message,
-            Modifier.weight(weightMessage).padding(start = rowStartPadding.dp)
+            Modifier.weight(weightMessage).padding(horizontal = rowHorizontalPadding.dp)
         ) {
-            Text(text = log.message, fontSize = rowFontSize.sp, maxLines = 1)
+            Text(text = log.message, fontSize = rowFontSize.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Divider(Modifier.width(1.dp).height(rowHeight.dp))
         Tooltip(
             log.createdAt.toString(),
-            Modifier.weight(weightDate).padding(start = rowStartPadding.dp)
+            Modifier.weight(weightDate).padding(horizontal = rowHorizontalPadding.dp)
         ) {
-            Text(text = log.createdAt.toString(), fontSize = rowFontSize.sp, maxLines = 1)
+            Text(text = log.createdAt.toString(), fontSize = rowFontSize.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
