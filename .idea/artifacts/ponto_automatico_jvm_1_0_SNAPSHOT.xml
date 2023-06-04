@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ponto_automatico-jvm-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/build/libs</output-path>
+    <root id="archive" name="ponto_automatico-jvm-1.0-SNAPSHOT.jar">
+      <element id="module-output" name="ponto_automatico.jvmMain" />
+    </root>
+  </artifact>
+</component>
