@@ -1,6 +1,7 @@
 package app.jotape.services
 
 import app.jotape.models.Configuration
+import app.jotape.models.Schedule
 import app.jotape.models.User
 import app.jotape.toSQLDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,14 @@ object GlobalService {
     )
     val state by lazy { _state.asStateFlow() }
 
+    fun canStart(): Boolean {
+        return _state.value.user?.isValid == true && !_state.value.isRunning
+    }
+
+    fun canStop(): Boolean {
+        return _state.value.isRunning
+    }
+
     fun setLastExec(dateTime: LocalDateTime) {
         Configuration(Configuration.Key.LAST_EXEC, dateTime.toSQLDateTime()).insertUpdate()
         _state.update { _state.value.copy(lastExec = dateTime) }
@@ -43,7 +52,7 @@ object GlobalService {
     }
 
     fun setUser(user: User?) {
-        user?.insertUpdate()
+        if (user != null) user.insertUpdate() else User.delete()
         _state.update { _state.value.copy(user = user) }
     }
 

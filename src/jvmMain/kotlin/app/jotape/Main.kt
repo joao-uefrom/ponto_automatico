@@ -21,7 +21,7 @@ fun main() = application {
         val schedulerService = SchedulerService
         schedulerService.tryRecover()
 
-        delay(2000)
+        delay(1000)
         isLoading = false
     }
 

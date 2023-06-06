@@ -32,11 +32,11 @@ fun Actions(uiState: HomeUIState, modifier: Modifier = Modifier) {
         SectionTitle("Ações")
 
         Column(Modifier.padding(horizontal = 16.dp)) {
-            if (globalState.isRunning.not()) {
+            if (GlobalService.canStop().not()) {
                 Action(
                     color = Color(0xFF4CAF50),
                     icon = Icons.Filled.SmartToy,
-                    enabled = globalState.user != null && globalState.user!!.isValid,
+                    enabled = GlobalService.canStart(),
                     onPressed = SchedulerService::run,
                     title = "Iniciar"
                 )

@@ -21,12 +21,19 @@ data class User(
                 )
             } else null
         }
+
+        fun delete() {
+            Configuration(Configuration.Key.EMAIL, "").delete()
+            Configuration(Configuration.Key.PASSWORD, "").delete()
+            Configuration(Configuration.Key.TWO_FA, "").delete()
+            Configuration(Configuration.Key.IS_VALID, "false").delete()
+        }
     }
 
     fun insertUpdate() {
-        Configuration(Configuration.Key.EMAIL, email).insertUpdate()
-        Configuration(Configuration.Key.PASSWORD, password).insertUpdate()
-        Configuration(Configuration.Key.TWO_FA, twoFa).insertUpdate()
+        Configuration(Configuration.Key.EMAIL, email.trimIndent()).insertUpdate()
+        Configuration(Configuration.Key.PASSWORD, password.trimIndent()).insertUpdate()
+        Configuration(Configuration.Key.TWO_FA, twoFa.trimIndent()).insertUpdate()
         Configuration(Configuration.Key.IS_VALID, isValid.toString()).insertUpdate()
     }
 }

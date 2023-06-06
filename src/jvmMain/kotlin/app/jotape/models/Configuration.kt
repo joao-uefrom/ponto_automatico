@@ -52,12 +52,34 @@ data class Configuration(
         }
 
         fun getNextExec(): LocalDateTime? {
-            get(Key.NEXT_EXEC)?.let {
-                return LocalDateTime.parse(it.value, dateTimeFormatterFromSQL())
+            get(Key.NEXT_EXEC)?.let { conf ->
+                val nextExec = LocalDateTime.parse(conf.value, dateTimeFormatterFromSQL())
+                val schedules = Schedule.getAll()
+
+                if (schedules.isEmpty() ||
+                    schedules.find { it.hour == nextExec.toLocalTime() } == null
+                ) {
+                    Configuration(Key.NEXT_EXEC, "").delete()
+                    return null
+                }
+
+                return nextExec
             }
+
+
 
             return null
         }
+    }
+
+    fun delete() {
+        val sql = "DELETE FROM configurations WHERE key = ?"
+        val stmt = Database.connection.prepareStatement(sql)
+
+        stmt.setString(1, key.toString())
+
+        stmt.executeUpdate()
+        stmt.close()
     }
 
     fun insertUpdate() {

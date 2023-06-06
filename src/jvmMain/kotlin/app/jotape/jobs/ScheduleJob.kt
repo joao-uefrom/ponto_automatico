@@ -6,7 +6,7 @@ import org.quartz.JobExecutionContext
 class ScheduleJob : Job {
 
     override fun execute(context: JobExecutionContext) {
-        // println("ScheduleJob.execute()")
+        println("ScheduleJob.execute()")
     }
 
 }

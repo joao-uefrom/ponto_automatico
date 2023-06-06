@@ -123,8 +123,7 @@ object HomeViewModel {
 
     @OptIn(DelicateCoroutinesApi::class)
     fun validateAuth() {
-        if (isAuthFieldsValid().not())
-            return
+        if (isAuthFieldsValid().not()) return
 
         _uiState.update {
             _uiState.value.copy(isLoading = true)

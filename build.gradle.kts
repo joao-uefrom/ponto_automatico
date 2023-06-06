@@ -26,9 +26,15 @@ kotlin {
                 implementation("org.jetbrains.compose.material:material-icons-extended-desktop:1.4.0")
                 implementation("org.xerial:sqlite-jdbc:3.42.0.0")
                 implementation("org.quartz-scheduler:quartz:2.3.2")
+                implementation("org.seleniumhq.selenium:selenium-java:4.7.2")
             }
         }
-        val jvmTest by getting
+        val jvmTest by getting {
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
+                implementation("org.junit.jupiter:junit-jupiter-engine:5.9.1")
+            }
+        }
     }
 }
 
