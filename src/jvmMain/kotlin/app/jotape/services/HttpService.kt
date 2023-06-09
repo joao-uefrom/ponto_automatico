@@ -63,12 +63,12 @@ object HttpService {
         if (webDriver != null) return webDriver!!
 
         val options = ChromeOptions()
-        options.addArguments("--user-agent=$user_agent")
-        options.addArguments("--incognito")
-        options.addArguments("--disable-gpu")
-        options.addArguments("--no-sandbox")
+        options.addArguments("--deny-permission-prompts")
         options.addArguments("--disable-dev-shm-usage")
         options.addArguments("--disable-extensions")
+        options.addArguments("--disable-gpu")
+        options.addArguments("--incognito")
+        options.addArguments("--user-agent=$user_agent")
         if (isSilent) options.addArguments("--headless")
 
         val driver = ChromeDriver(options)
