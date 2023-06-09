@@ -11,15 +11,11 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.support.FindBy
 import org.openqa.selenium.support.PageFactory
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Duration
-import org.openqa.selenium.support.ui.ExpectedConditions as EC
 
 
 class LoginHttpPage(
     private val driver: WebDriver
 ) {
-    private val urlHome = "https://platform.senior.com.br/senior-x/#/"
     private val urlLogin = "https://platform.senior.com.br/login"
 
     @FindBy(id = "username-input-field")
@@ -50,8 +46,7 @@ class LoginHttpPage(
         }
 
         try {
-            WebDriverWait(driver, Duration.ofSeconds(10))
-                .until(EC.urlToBe(urlHome))
+            driver.findElement(By.id("logo-preview-desktop"))
         } catch (e: Exception) {
             throw TwoFAInvalidException()
         }
