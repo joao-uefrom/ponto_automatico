@@ -7,6 +7,7 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import java.time.Duration
+import java.time.LocalDateTime
 
 class HttpService(
     private val isSilent: Boolean = true
@@ -39,6 +40,7 @@ class HttpService(
 
         try {
             PunchTheClockHttpPage(getWebDriver()).punchTheClock()
+            GlobalService.setLastExec(LocalDateTime.now())
         } catch (e: Exception) {
             LogsService.error(this.javaClass, e.message ?: "Erro ao tentar bater o ponto.")
             return false
