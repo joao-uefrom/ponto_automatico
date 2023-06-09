@@ -20,6 +20,7 @@ class LoginHttpPage(
     private val driver: WebDriver
 ) {
     private val urlHome = "https://platform.senior.com.br/senior-x/#/"
+    private val urlLogin = "https://platform.senior.com.br/login"
 
     @FindBy(id = "username-input-field")
     private lateinit var emailField: WebElement
@@ -35,6 +36,8 @@ class LoginHttpPage(
     }
 
     fun login(user: Configuration.User) {
+        driver.get(urlLogin)
+
         emailField.sendKeys(user.email)
         passwordField.sendKeys(user.password)
         loginButton.click()

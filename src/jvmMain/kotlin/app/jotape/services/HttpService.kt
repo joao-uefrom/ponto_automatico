@@ -10,17 +10,16 @@ import java.time.Duration
 
 object HttpService {
     private var webDriver: WebDriver? = null
-    private const val url_login = "https://platform.senior.com.br/login"
-    private const val url_punch_the_clock = "https://platform.senior.com.br/senior-x/#/Gest%C3%A3o%20de%20Pessoas%20%7C%20HCM/1/res:%2F%2Fsenior.com.br%2Fhcm%2Fpontomobile%2FclockingEvent?category=frame&link=https:%2F%2Fplatform.senior.com.br%2Fhcm-pontomobile%2Fhcm%2Fpontomobile%2F%23%2Fclocking-event&withCredentials=true&r=0"
-    private const val user_agent = "Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
+    var isSilent: Boolean = true
+
+    private const val user_agent =
+        "Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
 
     init {
         System.setProperty("webdriver.chrome.driver", driverPath())
     }
 
-    fun login(user: Configuration.User, silent: Boolean = true): Boolean {
-        getWebDriver(silent).get(url_login)
-
+    fun login(user: Configuration.User): Boolean {
         LogsService.info(HttpService.javaClass, "Fazendo login...")
 
         try {
@@ -36,9 +35,7 @@ object HttpService {
         return true
     }
 
-    fun punchTheClock(silent: Boolean = true): Boolean {
-        getWebDriver(silent).get(url_punch_the_clock)
-
+    fun punchTheClock(): Boolean {
         LogsService.info(HttpService.javaClass, "Tentando bater o ponto...")
 
         try {
@@ -62,7 +59,7 @@ object HttpService {
         return classLoader.getResource("chromedriver_win32.exe")!!.path
     }
 
-    private fun getWebDriver(silent: Boolean = true): WebDriver {
+    private fun getWebDriver(): WebDriver {
         if (webDriver != null) return webDriver!!
 
         val options = ChromeOptions()
@@ -72,7 +69,7 @@ object HttpService {
         options.addArguments("--no-sandbox")
         options.addArguments("--disable-dev-shm-usage")
         options.addArguments("--disable-extensions")
-        if (silent) options.addArguments("--headless")
+        if (isSilent) options.addArguments("--headless")
 
         val driver = ChromeDriver(options)
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
