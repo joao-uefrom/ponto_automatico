@@ -1,15 +1,9 @@
 package app.jotape.ui.home.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,11 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.jotape.services.GlobalService
 import app.jotape.services.LogsService
 import app.jotape.services.SchedulerService
 import app.jotape.ui.home.HomeUIState
+import app.jotape.ui.home.HomeViewModel
 import java.time.LocalDateTime
 
 @Composable
@@ -32,6 +29,15 @@ fun Actions(uiState: HomeUIState, modifier: Modifier = Modifier) {
         SectionTitle("Ações")
 
         Column(Modifier.padding(horizontal = 16.dp)) {
+            Action(
+                color = MaterialTheme.colors.primary,
+                icon = Icons.Filled.AlarmOn,
+                enabled = uiState.isLoading.not() && GlobalService.isValid(),
+                onPressed = HomeViewModel::punchTheClock,
+                fontSize = 12.sp,
+                title = "Bater ponto"
+            )
+
             if (GlobalService.canStop().not()) {
                 Action(
                     color = Color(0xFF4CAF50),
@@ -72,6 +78,7 @@ fun Actions(uiState: HomeUIState, modifier: Modifier = Modifier) {
                 color = Color.DarkGray,
                 icon = Icons.Filled.DeleteForever,
                 onPressed = LogsService::deleteAll,
+                fontSize = 12.sp,
                 title = "Apagar Logs"
             )
         }
@@ -83,6 +90,7 @@ private fun Action(
     color: Color,
     enabled: Boolean = true,
     icon: ImageVector,
+    fontSize: TextUnit = TextUnit.Unspecified,
     onPressed: () -> Unit,
     title: String
 ) {
@@ -98,7 +106,7 @@ private fun Action(
         ) {
             Icon(icon, null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(title, modifier = Modifier.weight(1f))
+            Text(title, modifier = Modifier.weight(1f), fontSize = fontSize)
         }
     }
 }

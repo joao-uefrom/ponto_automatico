@@ -113,30 +113,43 @@ object HomeViewModel {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    fun punchTheClock() {
+        if (GlobalService.isValid().not()) return
+
+        _uiState.update { _uiState.value.copy(isLoading = true) }
+
+        GlobalScope.launch {
+            val httpService = HttpService(false)
+            httpService.login(globalState.value.user!!)
+            httpService.punchTheClock()
+            httpService.quit()
+
+            _uiState.update { _uiState.value.copy(isLoading = false) }
+        }
+    }
+
     fun removeSchedule(schedule: Schedule) {
         schedule.delete()
-        _uiState.update {
-            _uiState.value.copy(schedules = Schedule.getAll())
-        }
+        _uiState.update { _uiState.value.copy(schedules = Schedule.getAll()) }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     fun validateAuth() {
         if (isAuthFieldsValid().not()) return
 
-        _uiState.update {
-            _uiState.value.copy(isLoading = true)
-        }
+        _uiState.update { _uiState.value.copy(isLoading = true) }
 
         GlobalScope.launch {
+            val httpService = HttpService(false)
             val user = Configuration.User(
                 _uiState.value.email,
                 _uiState.value.password,
                 _uiState.value.twoFa
             )
 
-            user.isValid = HttpService.login(user)
-            HttpService.quit()
+            user.isValid = httpService.login(user)
+            httpService.quit()
             GlobalService.setUser(user)
             getUserStored()
 
