@@ -19,18 +19,18 @@ object LogsService {
         _logs.asStateFlow()
     }
 
-    fun info(event: String, message: String) {
-        val log = Log(event, message, Log.Type.INFO, LocalDateTime.now())
+    fun info(`class`: Class<Any>, message: String) {
+        val log = Log(`class`.simpleName, message, Log.Type.INFO, LocalDateTime.now())
         insert(log)
     }
 
-    fun error(event: String, message: String) {
-        val log = Log(event, message, Log.Type.ERROR, LocalDateTime.now())
+    fun error(`class`: Class<Any>, message: String) {
+        val log = Log(`class`.simpleName, message, Log.Type.ERROR, LocalDateTime.now())
         insert(log)
     }
 
-    fun warning(event: String, message: String) {
-        val log = Log(event, message, Log.Type.WARNING, LocalDateTime.now())
+    fun warning(`class`: Class<Any>, message: String) {
+        val log = Log(`class`.simpleName, message, Log.Type.WARNING, LocalDateTime.now())
         insert(log)
     }
 

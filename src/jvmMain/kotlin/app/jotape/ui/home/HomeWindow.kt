@@ -1,14 +1,15 @@
 package app.jotape.ui.home
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.Divider
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import app.jotape.appName
 import app.jotape.height
 import app.jotape.services.GlobalService
@@ -33,12 +34,11 @@ fun HomeWindow(
     Window(
         state = state,
         onCloseRequest = onCloseRequest,
-        undecorated = true,
-        resizable = false
+        undecorated = true
     ) {
         Theme {
             Column(Modifier.fillMaxSize()) {
-                TitleBar(title = appName, onExit = onCloseRequest, onMinimize = { state.isMinimized = true })
+                TitleBar(title = appName, onExit = onCloseRequest, onMinimizeRequest = { onMinimizeRequest(state) })
 
                 if (uiState.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
 
@@ -64,4 +64,9 @@ fun HomeWindow(
             }
         }
     }
+}
+
+private fun onMinimizeRequest(state: WindowState) {
+    state.isMinimized = true
+    GlobalService.setOnBackground(true)
 }

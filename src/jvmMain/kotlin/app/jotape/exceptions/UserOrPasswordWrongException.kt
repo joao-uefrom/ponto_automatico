@@ -1,3 +1,3 @@
 package app.jotape.exceptions
 
-class UserOrPasswordWrongException : Exception(message = "Usuário ou senha incorretos.")
+class UserOrPasswordWrongException : Exception("Usuário ou senha incorretos.")

@@ -22,10 +22,13 @@ fun ApplicationScope.TrayIcon(
     val trayState = rememberTrayState()
 
     Tray(
+        onAction = ::onOpenRequest,
         state = trayState,
         icon = TrayIcon,
         tooltip = appName,
         menu = {
+            Item("Abrir", onClick = ::onOpenRequest)
+
             if (GlobalService.isValid())
                 Item(
                     if (globalState.isRunning) "Pausar" else "Iniciar",
@@ -38,10 +41,12 @@ fun ApplicationScope.TrayIcon(
                     }
                 )
 
-            Item("Sair", onClick = ::exitApplication)
+            Item("Fechar", onClick = ::exitApplication)
         }
     )
 }
+
+private fun onOpenRequest() = GlobalService.setOnBackground(false)
 
 object TrayIcon : Painter() {
     override val intrinsicSize = Size(256f, 256f)

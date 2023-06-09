@@ -19,22 +19,39 @@ object SchedulerService {
     private val scheduler = StdSchedulerFactory.getDefaultScheduler()
     private var jobDetail: JobDetail? = null
 
+    fun init() {
+        if (GlobalService.isRunning().not()) return
+
+        val nextExec = Configuration.nextExec()?.value
+
+        if (nextExec == null) {
+            LogsService.info(SchedulerService.javaClass, "Nenhum tarefa a ser agendada.")
+            GlobalService.setRunning(false)
+            return
+        }
+
+        run()
+    }
+
     fun run() {
         if (scheduler.isInStandbyMode.not()) return
 
         if (Schedule.getAll().isEmpty()) {
-            LogsService.warning("SchedulerService", "Nenhum horário adicionado, impossível iniciar o serviço.")
+            LogsService.warning(SchedulerService.javaClass, "Nenhum horário adicionado, impossível iniciar o serviço.")
             GlobalService.setRunning(false)
             return
         }
 
         scheduler.start()
         GlobalService.setRunning(true)
+        LogsService.info(this.javaClass, "Serviço iniciado.")
 
-        LogsService.info(
-            "SchedulerService",
-            "Serviço iniciado em background."
-        )
+        val nextExec = Configuration.nextExec()?.value
+        if (nextExec != null && nextExec.isAfter(LocalDateTime.now())) {
+            toSchedule(nextExec)
+        } else {
+            toNext()
+        }
     }
 
     fun standby() {
@@ -42,7 +59,7 @@ object SchedulerService {
             scheduler.standby()
             GlobalService.setRunning(false)
 
-            LogsService.info("SchedulerService", "Serviço removido de background.")
+            LogsService.info(SchedulerService.javaClass, "Serviço parado.")
         }
     }
 
@@ -50,12 +67,12 @@ object SchedulerService {
         val schedules = Schedule.getAll()
 
         if (schedules.isEmpty()) {
-            LogsService.warning("SchedulerService", "Nenhum horário encontrado, impossível agendar tarefa.")
+            LogsService.warning(SchedulerService.javaClass, "Nenhum horário encontrado, impossível agendar tarefa.")
             standby()
             return
         }
 
-        val nextExec = Configuration.getNextExec()
+        val nextExec = Configuration.nextExec()?.value
         var now = when {
             nextExec == null || nextExec.isBefore(LocalDateTime.now()) -> LocalDateTime.now()
             else -> nextExec
@@ -79,14 +96,14 @@ object SchedulerService {
         val schedules = Schedule.getAll()
 
         if (schedules.isEmpty()) {
-            LogsService.warning("SchedulerService", "Nenhum horário encontrado, impossível agendar tarefa.")
+            LogsService.warning(SchedulerService.javaClass, "Nenhum horário encontrado, impossível agendar tarefa.")
             standby()
             return
         }
 
         if (nextExec.isBefore(LocalDateTime.now())) {
             LogsService.warning(
-                "SchedulerService",
+                SchedulerService.javaClass,
                 "Não foi possível voltar, próxima execução não agendada ou já ocorreu."
             )
             return
@@ -106,7 +123,7 @@ object SchedulerService {
             if (LocalDateTime.of(nextExec.toLocalDate(), before).isAfter(LocalDateTime.now())) {
                 toSchedule(LocalDateTime.of(nextExec.toLocalDate(), before))
             } else {
-                LogsService.warning("SchedulerService", "Não foi possível voltar, sem horário disponível.")
+                LogsService.warning(SchedulerService.javaClass, "Não foi possível voltar, sem horário disponível.")
             }
             return
         }
@@ -118,26 +135,6 @@ object SchedulerService {
             .withSecond(59)
 
         toPrevious(oldExec)
-    }
-
-    fun tryRecover() {
-        if (GlobalService.isRunning().not()) return
-
-        val nextExec = Configuration.getNextExec()
-
-        if (nextExec == null) {
-            LogsService.info("SchedulerService", "Nada a ser recuperado.")
-            GlobalService.setRunning(false)
-            return
-        }
-
-        run()
-
-        if (nextExec.isAfter(LocalDateTime.now())) {
-            toSchedule(nextExec)
-        } else {
-            toNext()
-        }
     }
 
     private fun getJob(): JobDetail {
@@ -169,6 +166,6 @@ object SchedulerService {
             scheduler.rescheduleJob(triggerKey("pontoTrigger"), newTrigger)
         }
 
-        LogsService.info("SchedulerService", "Próxima execução agendada para ${dateTime.toLocalTime()}.")
+        LogsService.info(SchedulerService.javaClass, "Próxima execução agendada para ${dateTime.toLocalTime()}.")
     }
 }

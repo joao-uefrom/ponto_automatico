@@ -1,10 +1,9 @@
 package app.jotape.ui.home
 
+import app.jotape.models.Configuration
 import app.jotape.models.Schedule
-import app.jotape.models.User
 import app.jotape.services.GlobalService
 import app.jotape.services.HttpService
-import app.jotape.services.SchedulerService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,7 +97,7 @@ object HomeViewModel {
 
         return _uiState.value.email != globalState.value.user?.email ||
                 _uiState.value.password != globalState.value.user?.password ||
-                _uiState.value.twoFa != globalState.value.user?.twoFa
+                _uiState.value.twoFa != globalState.value.user?.twofa
     }
 
     fun getUserStored() {
@@ -107,7 +106,7 @@ object HomeViewModel {
                 _uiState.value.copy(
                     email = user.email,
                     password = user.password,
-                    twoFa = user.twoFa,
+                    twoFa = user.twofa,
                     isValid = user.isValid
                 )
             }
@@ -130,13 +129,14 @@ object HomeViewModel {
         }
 
         GlobalScope.launch {
-            val user = User(
+            val user = Configuration.User(
                 _uiState.value.email,
                 _uiState.value.password,
                 _uiState.value.twoFa
             )
 
-            user.isValid = HttpService.validateAuth(user)
+            user.isValid = HttpService.login(user)
+            HttpService.quit()
             GlobalService.setUser(user)
             getUserStored()
 

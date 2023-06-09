@@ -29,7 +29,7 @@ fun WindowScope.TitleBar(
     title: String,
     centerTitle: Boolean = false,
     onExit: (() -> Unit)? = null,
-    onMinimize: (() -> Unit)? = null
+    onMinimizeRequest: (() -> Unit)? = null
 ) = WindowDraggableArea {
     var isHoverExit by remember { mutableStateOf(false) }
     var isHoverMinimize by remember { mutableStateOf(false) }
@@ -57,13 +57,13 @@ fun WindowScope.TitleBar(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (onMinimize != null)
+            if (onMinimizeRequest != null)
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .onPointerEvent(PointerEventType.Enter) { isHoverMinimize = true }
                         .onPointerEvent(PointerEventType.Exit) { isHoverMinimize = false }
-                        .onClick { onMinimize() }
+                        .onClick { onMinimizeRequest() }
                         .background(if (isHoverMinimize) Color.LightGray else Color.Transparent)
                         .width(30.dp)
                         .fillMaxHeight()

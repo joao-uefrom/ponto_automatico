@@ -1,9 +1,6 @@
 package app.jotape.services
 
 import app.jotape.models.Configuration
-import app.jotape.models.Schedule
-import app.jotape.models.User
-import app.jotape.toSQLDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -13,20 +10,25 @@ object GlobalService {
 
     data class State(
         val isRunning: Boolean = false,
-        val user: User? = null,
+        val onBackground: Boolean = false,
+        val user: Configuration.User? = null,
         val lastExec: LocalDateTime? = null,
         val nextExec: LocalDateTime? = null
     )
 
-    private val _state: MutableStateFlow<State> = MutableStateFlow(
-        State(
-            lastExec = Configuration.getLastExec(),
-            nextExec = Configuration.getNextExec(),
-            isRunning = Configuration.get(Configuration.Key.IS_RUNNING)?.value?.toBoolean() ?: false,
-            user = User.get()
-        )
-    )
-    val state by lazy { _state.asStateFlow() }
+    private val _state: MutableStateFlow<State> = MutableStateFlow(State())
+    val state = _state.asStateFlow()
+
+    fun init() {
+        _state.update {
+            State(
+                lastExec = Configuration.lastExec()?.value,
+                nextExec = Configuration.nextExec()?.value,
+                isRunning = Configuration.isRunning()?.value ?: false,
+                user = Configuration.user()
+            )
+        }
+    }
 
     fun canStart(): Boolean {
         return _state.value.user?.isValid == true && !_state.value.isRunning
@@ -37,33 +39,38 @@ object GlobalService {
     }
 
     fun setLastExec(dateTime: LocalDateTime) {
-        Configuration(Configuration.Key.LAST_EXEC, dateTime.toSQLDateTime()).insertUpdate()
+        Configuration.DateTime(Configuration.Key.LAST_EXEC, dateTime).insertUpdate()
         _state.update { _state.value.copy(lastExec = dateTime) }
     }
 
     fun setNextExec(dateTime: LocalDateTime) {
-        Configuration(Configuration.Key.NEXT_EXEC, dateTime.toSQLDateTime()).insertUpdate()
+        Configuration.DateTime(Configuration.Key.NEXT_EXEC, dateTime).insertUpdate()
         _state.update { _state.value.copy(nextExec = dateTime) }
     }
 
     fun setRunning(`as`: Boolean) {
-        Configuration(Configuration.Key.IS_RUNNING, `as`.toString()).insertUpdate()
+        Configuration.Boolean(Configuration.Key.IS_RUNNING, `as`).insertUpdate()
         _state.update { _state.value.copy(isRunning = `as`) }
     }
 
-    fun setUser(user: User?) {
-        if (user != null) user.insertUpdate() else User.delete()
+    fun setOnBackground(`as`: Boolean) {
+        _state.update { _state.value.copy(onBackground = `as`) }
+    }
+
+    fun setUser(user: Configuration.User?) {
+        if (user != null) user.insertUpdate() else Configuration.User.delete()
         _state.update { _state.value.copy(user = user) }
     }
 
     fun setValid(`as`: Boolean) {
-        _state.value.user?.let { user ->
-            Configuration(Configuration.Key.IS_VALID, `as`.toString()).insertUpdate()
-            _state.update {
-                _state.value.copy(
-                    user = user.copy(isValid = `as`)
-                )
-            }
+        if (_state.value.user == null) return
+
+        Configuration.Boolean(Configuration.Key.IS_VALID, `as`).insertUpdate()
+
+        _state.update {
+            _state.value.copy(
+                user = _state.value.user!!.copy(isValid = `as`)
+            )
         }
     }
 

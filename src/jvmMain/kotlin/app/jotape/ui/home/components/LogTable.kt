@@ -65,7 +65,7 @@ private fun LogHead() {
         modifier = Modifier.background(color = Color(0xFF1F1F1F))
     ) {
         Text(
-            "Evento",
+            "Classe",
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(weightEvent).padding(start = rowHorizontalPadding.dp)
         )
@@ -88,10 +88,10 @@ private fun LogHead() {
 private fun LogCell(log: Log) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Tooltip(
-            log.event,
+            log.`class`,
             Modifier.weight(weightEvent).padding(horizontal = rowHorizontalPadding.dp)
         ) {
-            Text(text = log.event, fontSize = rowFontSize.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = log.`class`, fontSize = rowFontSize.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Divider(Modifier.width(1.dp).height(rowHeight.dp))
         Tooltip(

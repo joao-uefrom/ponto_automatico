@@ -1,12 +1,13 @@
 package app.jotape.models
 
-import app.jotape.data.Database
 import app.jotape.dateTimeFormatterFromSQL
+import app.jotape.services.DBService
+import app.jotape.toSQLDateTime
 import java.time.LocalDateTime
 
-data class Configuration(
-    val key: Key,
-    val value: String
+abstract class Configuration(
+    private val key: Key,
+    private val _value: Any
 ) {
 
     enum class Key {
@@ -19,22 +20,88 @@ data class Configuration(
         NEXT_EXEC
     }
 
+    class String(key: Key, value: kotlin.String) : Configuration(key, value)
+    class DateTime(key: Key, val value: LocalDateTime) : Configuration(key, value)
+    class Boolean(key: Key, val value: kotlin.Boolean) : Configuration(key, value)
+
+    data class User(
+        val email: kotlin.String,
+        val password: kotlin.String,
+        val twofa: kotlin.String,
+        var isValid: kotlin.Boolean = false
+    ) {
+        companion object {
+            fun delete() {
+                delete(Key.EMAIL)
+                delete(Key.PASSWORD)
+                delete(Key.TWO_FA)
+                delete(Key.IS_VALID)
+            }
+        }
+
+        fun insertUpdate() {
+            String(Key.EMAIL, email.trimIndent()).insertUpdate()
+            String(Key.PASSWORD, password.trimIndent()).insertUpdate()
+            String(Key.TWO_FA, twofa.trimIndent()).insertUpdate()
+            Boolean(Key.IS_VALID, isValid).insertUpdate()
+        }
+    }
+
     companion object {
-        fun get(key: Key): Configuration? {
-            val sql = "SELECT key, value FROM configurations WHERE key = ?"
-            val stmt = Database.connection.prepareStatement(sql)
+        fun isRunning(): Boolean? = get(Key.IS_RUNNING)?.let {
+            return Boolean(Key.IS_RUNNING, it.toBoolean())
+        }
+
+        fun isValid(): Boolean? = get(Key.IS_VALID)?.let {
+            return Boolean(Key.IS_VALID, it.toBoolean())
+        }
+
+        fun lastExec(): DateTime? = get(Key.LAST_EXEC)?.let {
+            return DateTime(Key.LAST_EXEC, LocalDateTime.parse(it, dateTimeFormatterFromSQL()))
+        }
+
+        fun nextExec(): DateTime? = get(Key.NEXT_EXEC)?.let {
+            val nextExec = LocalDateTime.parse(it, dateTimeFormatterFromSQL())
+            val schedules = Schedule.getAll()
+
+            if (schedules.isEmpty() ||
+                schedules.find { schedule -> schedule.hour == nextExec.toLocalTime() } == null
+            ) {
+                delete(Key.NEXT_EXEC)
+                return null
+            }
+
+            return DateTime(Key.NEXT_EXEC, nextExec)
+        }
+
+        fun user(): User? {
+            val email = get(Key.EMAIL) ?: ""
+            val password = get(Key.PASSWORD) ?: ""
+            val twoFa = get(Key.TWO_FA) ?: ""
+
+            return if (
+                email.isNotEmpty() &&
+                password.isNotEmpty() &&
+                twoFa.isNotEmpty()
+            ) {
+                User(
+                    email,
+                    password,
+                    twoFa,
+                    isValid()?.value ?: false
+                )
+            } else null
+        }
+
+        private fun get(key: Key): kotlin.String? {
+            val sql = "SELECT value FROM configurations WHERE key = ?"
+            val stmt = DBService.connection.prepareStatement(sql)
 
             stmt.setString(1, key.toString())
 
             val result = stmt.executeQuery()
             val configuration = when (result.next()) {
-                true -> {
-                    Configuration(
-                        Key.valueOf(result.getString("key")),
-                        result.getString("value")
-                    )
-                }
-
+                true -> result.getString("value")
                 false -> null
             }
 
@@ -43,52 +110,37 @@ data class Configuration(
             return configuration
         }
 
-        fun getLastExec(): LocalDateTime? {
-            get(Key.LAST_EXEC)?.let {
-                return LocalDateTime.parse(it.value, dateTimeFormatterFromSQL())
-            }
+        private fun delete(key: Key) {
+            val sql = "DELETE FROM configurations WHERE key = ?"
+            val stmt = DBService.connection.prepareStatement(sql)
 
-            return null
-        }
+            stmt.setString(1, key.toString())
 
-        fun getNextExec(): LocalDateTime? {
-            get(Key.NEXT_EXEC)?.let { conf ->
-                val nextExec = LocalDateTime.parse(conf.value, dateTimeFormatterFromSQL())
-                val schedules = Schedule.getAll()
-
-                if (schedules.isEmpty() ||
-                    schedules.find { it.hour == nextExec.toLocalTime() } == null
-                ) {
-                    Configuration(Key.NEXT_EXEC, "").delete()
-                    return null
-                }
-
-                return nextExec
-            }
-
-
-
-            return null
+            stmt.executeUpdate()
+            stmt.close()
         }
     }
 
-    fun delete() {
-        val sql = "DELETE FROM configurations WHERE key = ?"
-        val stmt = Database.connection.prepareStatement(sql)
-
-        stmt.setString(1, key.toString())
-
-        stmt.executeUpdate()
-        stmt.close()
-    }
+    fun delete() = delete(this.key)
 
     fun insertUpdate() {
         val sql = "INSERT INTO configurations (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = ?"
-        val stmt = Database.connection.prepareStatement(sql)
+        val stmt = DBService.connection.prepareStatement(sql)
 
         stmt.setString(1, key.toString())
-        stmt.setString(2, value)
-        stmt.setString(3, value)
+
+        when (this) {
+            is DateTime -> {
+                stmt.setString(2, value.toSQLDateTime())
+                stmt.setString(3, value.toSQLDateTime())
+            }
+
+            else -> {
+                stmt.setString(2, _value.toString())
+                stmt.setString(3, _value.toString())
+            }
+        }
+
 
         stmt.executeUpdate()
         stmt.close()
