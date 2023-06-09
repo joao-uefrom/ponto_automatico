@@ -8,44 +8,43 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import java.time.Duration
 
-object HttpService {
+class HttpService(
+    private val isSilent: Boolean = true
+) {
     private var webDriver: WebDriver? = null
-    var isSilent: Boolean = true
-
-    private const val user_agent =
-        "Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
+    private val userAgent = "Mozilla/5.0 (Windows NT 4.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
 
     init {
         System.setProperty("webdriver.chrome.driver", driverPath())
     }
 
     fun login(user: Configuration.User): Boolean {
-        LogsService.info(HttpService.javaClass, "Fazendo login...")
+        LogsService.info(this.javaClass, "Fazendo login...")
 
         try {
             LoginHttpPage(getWebDriver())
                 .login(user)
         } catch (e: Exception) {
-            LogsService.error(HttpService.javaClass, e.message ?: "Erro ao tentar fazer login.")
+            LogsService.error(this.javaClass, e.message ?: "Erro ao tentar fazer login.")
             return false
         }
 
-        LogsService.info(HttpService.javaClass, "Login feito com sucesso.")
+        LogsService.info(this.javaClass, "Login feito com sucesso.")
 
         return true
     }
 
     fun punchTheClock(): Boolean {
-        LogsService.info(HttpService.javaClass, "Tentando bater o ponto...")
+        LogsService.info(this.javaClass, "Tentando bater o ponto...")
 
         try {
             PunchTheClockHttpPage(getWebDriver()).punchTheClock()
         } catch (e: Exception) {
-            LogsService.error(HttpService.javaClass, e.message ?: "Erro ao tentar bater o ponto.")
+            LogsService.error(this.javaClass, e.message ?: "Erro ao tentar bater o ponto.")
             return false
         }
 
-        LogsService.info(HttpService.javaClass, "Ponto batido com sucesso.")
+        LogsService.info(this.javaClass, "Ponto batido com sucesso.")
 
         return true
     }
@@ -68,7 +67,7 @@ object HttpService {
         options.addArguments("--disable-extensions")
         options.addArguments("--disable-gpu")
         options.addArguments("--incognito")
-        options.addArguments("--user-agent=$user_agent")
+        options.addArguments("--user-agent=$userAgent")
         if (isSilent) options.addArguments("--headless")
 
         val driver = ChromeDriver(options)
