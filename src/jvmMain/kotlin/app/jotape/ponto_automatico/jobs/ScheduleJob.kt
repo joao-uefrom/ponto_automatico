@@ -8,13 +8,13 @@ import org.quartz.JobExecutionContext
 
 class ScheduleJob : Job {
 
-    private val httpService = HttpService()
-
     override fun execute(context: JobExecutionContext) {
         Configuration.user()?.let {
-            httpService.login(it)
-            httpService.punchTheClock()
-            httpService.quit()
+            if (HttpService.login(it)) {
+                HttpService.punchTheClock()
+            }
+
+            HttpService.quit()
         }
 
         SchedulerService.toNext()

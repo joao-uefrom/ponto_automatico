@@ -120,10 +120,10 @@ object HomeViewModel {
         _uiState.update { _uiState.value.copy(isLoading = true) }
 
         GlobalScope.launch {
-            val httpService = HttpService(false)
-            httpService.login(globalState.value.user!!)
-            httpService.punchTheClock()
-            httpService.quit()
+            HttpService.isSilent = false
+            HttpService.login(globalState.value.user!!)
+            HttpService.punchTheClock()
+            HttpService.quit()
 
             _uiState.update { _uiState.value.copy(isLoading = false) }
         }
@@ -141,15 +141,15 @@ object HomeViewModel {
         _uiState.update { _uiState.value.copy(isLoading = true) }
 
         GlobalScope.launch {
-            val httpService = HttpService(false)
             val user = Configuration.User(
                 _uiState.value.email,
                 _uiState.value.password,
                 _uiState.value.twoFa
             )
 
-            user.isValid = httpService.login(user)
-            httpService.quit()
+            HttpService.isSilent = false
+            user.isValid = HttpService.login(user)
+            HttpService.quit()
             GlobalService.setUser(user)
             getUserStored()
 

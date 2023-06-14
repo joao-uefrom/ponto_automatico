@@ -1,5 +1,6 @@
 .gradle
-database.db
+db.sqlite3
+chromedriver_win32.exe
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/

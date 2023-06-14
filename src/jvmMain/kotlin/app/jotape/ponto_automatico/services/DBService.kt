@@ -1,6 +1,7 @@
 package app.jotape.ponto_automatico.services
 
 import app.jotape.ponto_automatico.models.Migration
+import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
 
@@ -27,7 +28,11 @@ object DBService {
         }
     }
 
-    private fun dbPath(): String = "C:\\Users\\joao_\\Trabalhos\\pmweb\\ponto_automatico\\database.db"
+    private fun dbPath(): String {
+        val executablePath = File(System.getProperty("user.dir"))
+        val dbPath = File(executablePath, "db.sqlite3")
+        return dbPath.absolutePath
+    }
 
     private fun getLastMigration(): Int {
         val stmt = connection.createStatement()

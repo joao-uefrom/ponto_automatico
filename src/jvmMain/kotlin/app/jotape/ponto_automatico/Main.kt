@@ -1,9 +1,11 @@
 package app.jotape.ponto_automatico
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.application
 import app.jotape.ponto_automatico.services.DBService
 import app.jotape.ponto_automatico.services.GlobalService
+import app.jotape.ponto_automatico.services.HttpService
 import app.jotape.ponto_automatico.services.SchedulerService
 import app.jotape.ponto_automatico.ui.LoadingWindow
 import app.jotape.ponto_automatico.ui.TrayIcon
@@ -27,8 +29,13 @@ fun main() = application {
 
     if (isLoading.not()) {
         when (state.onBackground) {
-            true -> TrayIcon(::exitApplication)
-            false -> HomeWindow(::exitApplication)
+            true -> TrayIcon(::onCloseApplication)
+            false -> HomeWindow(::onCloseApplication)
         }
     }
+}
+
+private fun ApplicationScope.onCloseApplication() {
+    HttpService.quit()
+    exitApplication()
 }
