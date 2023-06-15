@@ -62,10 +62,11 @@ object HttpService {
 
     fun quit() {
         try {
-            getWebDriver().quit()
+            webDriver?.quit()
         } catch (_: Exception) {
         } finally {
             isSilent = true
+            webDriver = null
         }
     }
 
