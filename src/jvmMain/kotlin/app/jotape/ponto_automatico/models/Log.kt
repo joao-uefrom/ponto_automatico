@@ -18,47 +18,35 @@ data class Log(
     }
 
     companion object {
-        fun deleteAll() {
-            val sql = "DELETE FROM logs WHERE 1"
-            val stmt = DBService.connection.prepareStatement(sql)
-            stmt.executeUpdate()
-            stmt.close()
-        }
+        fun deleteAll() = DBService.execute("DELETE FROM logs WHERE 1")
 
-        fun getAll(): List<Log> {
-            val sql = "SELECT class, message, type, created_at FROM logs ORDER BY id DESC"
-            val stmt = DBService.connection.prepareStatement(sql)
+        fun getAll(): List<Log> =
+            DBService.query("SELECT class, message, type, created_at FROM logs ORDER BY id DESC") {
+                val logs = mutableListOf<Log>()
 
-            val result = stmt.executeQuery()
-            val logs = mutableListOf<Log>()
-
-            while (result.next()) {
-                logs.add(
-                    Log(
-                        result.getString("class"),
-                        result.getString("message"),
-                        Type.valueOf(result.getString("type")),
-                        LocalDateTime.parse(result.getString("created_at"), dateTimeFormatterFromSQL())
+                while (it.next()) {
+                    logs.add(
+                        Log(
+                            it.getString("class"),
+                            it.getString("message"),
+                            Type.valueOf(it.getString("type")),
+                            LocalDateTime.parse(it.getString("created_at"), dateTimeFormatterFromSQL())
+                        )
                     )
-                )
+                }
+
+                logs
             }
-
-            stmt.close()
-
-            return logs
-        }
     }
 
-    fun insert() {
-        val sql = "INSERT INTO logs (class, message, type, created_at) VALUES (?, ?, ?, ?)"
-        val stmt = DBService.connection.prepareStatement(sql)
-
-        stmt.setString(1, `class`)
-        stmt.setString(2, message)
-        stmt.setString(3, type.toString())
-        stmt.setString(4, createdAt.toSQLDateTime())
-
-        stmt.executeUpdate()
-        stmt.close()
-    }
+    fun insert() =
+        DBService.execute(
+            "INSERT INTO logs (class, message, type, created_at) VALUES (?, ?, ?, ?)",
+            listOf(
+                `class`,
+                message,
+                type.toString(),
+                createdAt.toSQLDateTime()
+            )
+        )
 }

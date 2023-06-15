@@ -93,57 +93,26 @@ abstract class Configuration(
             } else null
         }
 
-        private fun get(key: Key): kotlin.String? {
-            val sql = "SELECT value FROM configurations WHERE key = ?"
-            val stmt = DBService.connection.prepareStatement(sql)
+        private fun get(key: Key): kotlin.String? =
+            DBService.query("SELECT value FROM configurations WHERE key = ?", listOf(key.toString())) {
+                val configuration = when (it.next()) {
+                    true -> it.getString("value")
+                    false -> null
+                }
 
-            stmt.setString(1, key.toString())
-
-            val result = stmt.executeQuery()
-            val configuration = when (result.next()) {
-                true -> result.getString("value")
-                false -> null
+                configuration
             }
 
-            stmt.close()
-
-            return configuration
-        }
-
-        private fun delete(key: Key) {
-            val sql = "DELETE FROM configurations WHERE key = ?"
-            val stmt = DBService.connection.prepareStatement(sql)
-
-            stmt.setString(1, key.toString())
-
-            stmt.executeUpdate()
-            stmt.close()
-        }
+        private fun delete(key: Key) =
+            DBService.execute("DELETE FROM configurations WHERE key = ?", listOf(key.toString()))
     }
 
     fun delete() = delete(this.key)
 
-    fun insertUpdate() {
-        val sql = "INSERT INTO configurations (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = ?"
-        val stmt = DBService.connection.prepareStatement(sql)
-
-        stmt.setString(1, key.toString())
-
-        when (this) {
-            is DateTime -> {
-                stmt.setString(2, value.toSQLDateTime())
-                stmt.setString(3, value.toSQLDateTime())
-            }
-
-            else -> {
-                stmt.setString(2, _value.toString())
-                stmt.setString(3, _value.toString())
-            }
-        }
-
-
-        stmt.executeUpdate()
-        stmt.close()
-    }
+    fun insertUpdate() =
+        DBService.execute(
+            "INSERT INTO configurations (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = ?",
+            listOf(key.toString(), _value, _value)
+        )
 
 }

@@ -1,13 +1,17 @@
 package app.jotape.ponto_automatico.services
 
+import app.jotape.ponto_automatico.models.Configuration
 import app.jotape.ponto_automatico.models.Migration
+import app.jotape.ponto_automatico.toSQLDateTime
 import java.io.File
-import java.sql.Connection
-import java.sql.DriverManager
+import java.sql.*
 
 object DBService {
+    fun execute(sql: String) = exec(sql, null)
+    fun execute(sql: String, params: List<Any>) = exec(sql, params)
 
-    val connection: Connection by lazy { DriverManager.getConnection("jdbc:sqlite:${dbPath()}") }
+    fun <T> query(sql: String, result: (ResultSet) -> T): T = execQuery(sql, null, result)
+    fun <T> query(sql: String, params: List<Any>, result: (ResultSet) -> T): T = execQuery(sql, params, result)
 
     fun init() {
         prepareDatabase()
@@ -15,7 +19,7 @@ object DBService {
 
         getMigrations().forEach { migration ->
             if (migration.statement > lastMigration) {
-                val conn = connection
+                val conn = connection()
                 conn.autoCommit = false
 
                 val stmt = conn.createStatement()
@@ -24,9 +28,12 @@ object DBService {
 
                 conn.commit()
                 stmt.close()
+                conn.close()
             }
         }
     }
+
+    private fun connection(): Connection = DriverManager.getConnection("jdbc:sqlite:${dbPath()}")
 
     private fun dbPath(): String {
         val executablePath = File(System.getProperty("user.dir"))
@@ -34,14 +41,10 @@ object DBService {
         return dbPath.absolutePath
     }
 
-    private fun getLastMigration(): Int {
-        val stmt = connection.createStatement()
-        val result = stmt.executeQuery("SELECT statement FROM migrations ORDER BY statement DESC LIMIT 1")
-        val lastMigration = if (result.next()) result.getInt("statement") else 0
+    private fun getLastMigration(): Int = query("SELECT statement FROM migrations ORDER BY statement DESC LIMIT 1") {
+        val lastMigration = if (it.next()) it.getInt("statement") else 0
 
-        stmt.close()
-
-        return lastMigration
+        lastMigration
     }
 
     private fun getMigrations(): List<Migration> {
@@ -76,9 +79,59 @@ object DBService {
         )
     }
 
-    private fun prepareDatabase() {
-        val stmt = connection.createStatement()
-        stmt.execute("CREATE TABLE IF NOT EXISTS migrations (statement INT NOT NULL UNIQUE)")
-        stmt.close()
+    private fun prepareDatabase() = execute("CREATE TABLE IF NOT EXISTS migrations (statement INT NOT NULL UNIQUE)")
+
+    private fun prepareStatement(sql: String, params: List<Any>, conn: Connection): PreparedStatement {
+        val stmt = conn.prepareStatement(sql)
+
+        params.forEachIndexed { index, any ->
+            when (any) {
+                is String -> stmt.setString(index + 1, any)
+                is Int -> stmt.setInt(index + 1, any)
+                is Boolean -> stmt.setString(index + 1, any.toString())
+                is Configuration.DateTime -> stmt.setString(index + 1, any.value.toSQLDateTime())
+                else -> throw Exception("Invalid type")
+            }
+        }
+
+        return stmt
+    }
+
+    private fun exec(sql: String, params: List<Any>?) {
+        val conn = connection()
+        val stmt: Statement?
+
+        if (params == null) {
+            stmt = conn.createStatement()
+            stmt.execute(sql)
+        } else {
+            stmt = prepareStatement(sql, params, conn)
+            stmt.execute()
+        }
+
+        stmt!!.close()
+        conn.close()
+    }
+
+    private fun <T> execQuery(sql: String, params: List<Any>?, result: (ResultSet) -> T): T {
+        val conn = connection()
+        val stmt: Statement?
+        val resultSet: ResultSet?
+
+        if (params == null) {
+            stmt = conn.createStatement()
+            resultSet = stmt.executeQuery(sql)
+        } else {
+            stmt = prepareStatement(sql, params, conn)
+            resultSet = stmt.executeQuery()
+        }
+
+        val value = result(resultSet)
+
+        resultSet.close()
+        stmt!!.close()
+        conn.close()
+
+        return value
     }
 }
